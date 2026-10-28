@@ -655,6 +655,11 @@ export const build = (context: Context, node: NodeObject, children?: Child[]): v
         prevNode = child
       }
     }
+    if (prevNode && !prevNode.s) {
+      for (let p = prevNode; p && !isNodeString(p); p = p.vC?.at(-1) as NodeObject) {
+        delete p.nN
+      }
+    }
     oldVChildren = oldChildrenByKey ? [...oldChildrenByKey.values()] : oldVChildren
     node.vR = buildWithPreviousChildren ? [...node.vC, ...(oldVChildren || [])] : oldVChildren || []
     node.vC = vChildren

@@ -2267,6 +2267,39 @@ describe('DOM', () => {
     expect(initialRows.filter((row) => row.isConnected)).toHaveLength(1)
   })
 
+  it('maintains correct DOM order when parent reorders keyed components in the same tick as child updates', () => {
+    let setItems: (items: string[]) => void = () => {}
+    const rowSetters: ((count: number) => void)[] = []
+
+    function Row({ label }: { label: string }) {
+      const [count, setCount] = useState(0)
+      rowSetters.push(setCount)
+      return <li data-count={count}>{label}</li>
+    }
+
+    function List() {
+      const [items, set] = useState(['x', 'a', 'c'])
+      setItems = set
+      return (
+        <ul>
+          {items.map((label) => (
+            <Row key={label} label={label} />
+          ))}
+        </ul>
+      )
+    }
+
+    render(<List />, root)
+    expect([...root.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['x', 'a', 'c'])
+
+    flushSync(() => {
+      setItems(['a', 'c', 'x'])
+      rowSetters.forEach((set, index) => set(index + 1))
+    })
+
+    expect([...root.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['a', 'c', 'x'])
+  })
+
   it('allows an unkeyed child to reuse a keyed child with the same tag', async () => {
     let removeKeyedSiblings: () => void = () => {}
     const Row = ({ label }: { label: string }) => {
